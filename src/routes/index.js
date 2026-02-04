@@ -6,7 +6,16 @@ const productRoutes = require('./product.routes');
 const productsRoutes = require('./products.routes');
 const searchRoutes = require('./search.routes');
 
-// API Information
+/**
+ * @swagger
+ * /api/v1:
+ *   get:
+ *     summary: API Information
+ *     description: Get API version and available endpoints
+ *     responses:
+ *       200:
+ *         description: API information
+ */
 router.get('/', (req, res) => {
   res.json({
     success: true,
@@ -28,7 +37,8 @@ router.get('/', (req, res) => {
         search: {
           products: 'GET /api/v1/search/product?query=...'
         }
-      }
+      },
+      documentation: '/api/docs'
     }
   });
 });

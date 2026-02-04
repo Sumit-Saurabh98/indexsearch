@@ -19,6 +19,10 @@ const routes = require('./routes');
 const { errorHandler, notFoundHandler } = require('./middleware/error.middleware');
 const { requestTimer, requestLogger } = require('./middleware/request.middleware');
 
+// Import Swagger
+const swaggerUi = require('swagger-ui-express');
+const swaggerSpec = require('./config/swagger');
+
 // Import config
 const { API_PREFIX } = require('./config/constants');
 
@@ -61,6 +65,12 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Swagger API documentation
+app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+  customCss: '.swagger-ui .topbar { display: none }',
+  customSiteTitle: 'IndexSearch API Documentation'
+}));
+
 // API routes
 app.use(API_PREFIX, routes);
 
@@ -90,6 +100,7 @@ const startServer = async () => {
       console.log(`📍 URL:         http://localhost:${PORT}`);
       console.log(`📊 Health:      http://localhost:${PORT}/health`);
       console.log(`📚 API Info:    http://localhost:${PORT}${API_PREFIX}`);
+      console.log(`📖 API Docs:    http://localhost:${PORT}/api/docs`);
       console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
       console.log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`);
     });
