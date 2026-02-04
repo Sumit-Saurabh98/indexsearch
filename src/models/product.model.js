@@ -198,6 +198,9 @@ ProductSchema.methods.toAPIResponse = function() {
   delete obj._id;
   delete obj.__v;
   
+  // Add Sellingprice alias for assignment compatibility (keeps price too)
+  obj.Sellingprice = obj.price;
+  
   return obj;
 };
 

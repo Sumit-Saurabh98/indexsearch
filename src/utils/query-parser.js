@@ -1,87 +1,313 @@
 // Query Parser - Extracts intent, filters, and corrections from search queries
 
-// Hinglish to English mappings
+// Comprehensive Hinglish to English mappings (100+ terms)
 const hinglishMappings = {
-  // Price-related
+  // =============================================
+  // PRICE-RELATED (15 terms)
+  // =============================================
   'sasta': 'cheap budget affordable',
   'sastha': 'cheap budget affordable',
   'saste': 'cheap budget affordable',
+  'sasti': 'cheap budget affordable',
   'mehenga': 'expensive premium',
   'mehnga': 'expensive premium',
-  
-  // Quality-related  
+  'mahenga': 'expensive premium',
+  'kimat': 'price cost',
+  'daam': 'price cost',
+  'paisa': 'money value',
+  'paise': 'money value',
+  'rupiya': 'rupees price',
+  'rupaye': 'rupees price',
+  'muft': 'free',
+  'offer': 'discount deal',
+
+  // =============================================
+  // QUALITY-RELATED (20 terms)
+  // =============================================
   'accha': 'good best quality',
   'acha': 'good best quality',
+  'achha': 'good best quality',
+  'behtreen': 'best excellent',
+  'behtareen': 'best excellent',
+  'shandar': 'excellent amazing',
+  'shaandaar': 'excellent amazing',
+  'zabardast': 'awesome great',
+  'jabardast': 'awesome great',
+  'kamaal': 'amazing wonderful',
+  'lajawaab': 'outstanding',
+  'lajawab': 'outstanding',
   'bekar': 'bad poor',
   'bekaar': 'bad poor',
-  'maja': 'fun good',
+  'ghatiya': 'poor quality bad',
+  'maja': 'fun good enjoyable',
   'mast': 'cool good awesome',
-  
-  // Size-related
+  'mazaa': 'fun enjoyable',
+  'badhiya': 'excellent good',
+  'sahi': 'correct good right',
+
+  // =============================================
+  // SIZE-RELATED (12 terms)
+  // =============================================
   'bada': 'big large',
+  'badi': 'big large',
+  'bare': 'big large',
   'chota': 'small compact',
   'chhota': 'small compact',
-  
-  // Misc
+  'choti': 'small compact',
+  'chhoti': 'small compact',
+  'lambi': 'long tall',
+  'lamba': 'long tall',
+  'patla': 'slim thin',
+  'patli': 'slim thin',
+  'halka': 'light lightweight',
+
+  // =============================================
+  // RECENCY & TIME (10 terms)
+  // =============================================
   'naya': 'new latest',
-  'purana': 'old',
+  'nayi': 'new latest',
+  'naye': 'new latest',
+  'purana': 'old previous',
+  'purani': 'old previous',
+  'aaj': 'today new',
+  'abhi': 'now current',
+  'taaza': 'fresh new latest',
+  'latest': 'new latest newest',
+  'navin': 'new modern',
+
+  // =============================================
+  // SPEED & PERFORMANCE (10 terms)
+  // =============================================
+  'tez': 'fast quick',
+  'tej': 'fast quick',
+  'jaldi': 'quick fast',
+  'speed': 'fast performance',
+  'dhime': 'slow',
+  'dheere': 'slow',
+  'powerful': 'fast strong',
+  'tagda': 'powerful strong',
+  'tagdi': 'powerful strong',
+  'dum': 'power performance',
+
+  // =============================================
+  // COLORS (Hindi) (12 terms)
+  // =============================================
+  'kala': 'black',
+  'kaala': 'black',
+  'safed': 'white',
+  'laal': 'red',
+  'neela': 'blue',
+  'nila': 'blue',
+  'hara': 'green',
+  'peela': 'yellow',
+  'gulabi': 'pink',
+  'sona': 'gold golden',
+  'chandi': 'silver',
+  'narangi': 'orange',
+
+  // =============================================
+  // SHOPPING TERMS (15 terms)
+  // =============================================
+  'kharido': 'buy purchase',
+  'kharidna': 'buy purchase',
+  'lena': 'buy get',
+  'lelo': 'buy get take',
+  'mangao': 'order',
+  'order': 'order buy',
+  'delivery': 'shipping delivery',
+  'bhejo': 'send deliver',
+  'wapsi': 'return exchange',
+  'badlo': 'exchange replace',
+  'milega': 'available get',
+  'chahiye': 'want need',
+  'dikhao': 'show display',
+  'dekho': 'see show',
+  'batao': 'tell recommend',
+
+  // =============================================
+  // COMMON FILLER WORDS (10 terms)
+  // =============================================
   'wala': '',
   'waala': '',
+  'wali': '',
+  'waali': '',
   'ka': '',
   'ki': '',
-  'ke': ''
+  'ke': '',
+  'mein': '',
+  'hai': '',
+  'hain': '',
+
+  // =============================================
+  // COMPARISON (8 terms)
+  // =============================================
+  'behtar': 'better',
+  'zyada': 'more',
+  'jyada': 'more',
+  'kam': 'less fewer',
+  'sabse': 'most best',
+  'kuch': 'some',
+  'kaafi': 'enough sufficient',
+  'bahut': 'very much'
 };
 
-// Common brand misspellings
+// Common brand/product misspellings (expanded)
 const spellingCorrections = {
-  // Apple
+  // =============================================
+  // APPLE PRODUCTS
+  // =============================================
   'ifone': 'iphone',
   'iphone': 'iphone',
   'iphon': 'iphone',
   'ipone': 'iphone',
   'aiphone': 'iphone',
   'aifon': 'iphone',
+  'i phone': 'iphone',
   'appel': 'apple',
   'aple': 'apple',
+  'apel': 'apple',
   'macbok': 'macbook',
   'makbook': 'macbook',
+  'macbuk': 'macbook',
+  'mac book': 'macbook',
   'airpod': 'airpods',
-  
-  // Samsung
+  'airpods': 'airpods',
+  'air pod': 'airpods',
+  'ipads': 'ipad',
+  'i pad': 'ipad',
+
+  // =============================================
+  // SAMSUNG
+  // =============================================
   'sumsung': 'samsung',
   'samung': 'samsung',
   'samsang': 'samsung',
+  'samsong': 'samsung',
   'galxy': 'galaxy',
   'galaxi': 'galaxy',
-  
-  // Others
+  'galaksi': 'galaxy',
+  'galaxy': 'galaxy',
+
+  // =============================================
+  // ONEPLUS
+  // =============================================
   'onplus': 'oneplus',
+  'oneplus': 'oneplus',
   'one+': 'oneplus',
+  '1+': 'oneplus',
+  'one plus': 'oneplus',
+  'vanplus': 'oneplus',
+
+  // =============================================
+  // XIAOMI / REDMI
+  // =============================================
   'redme': 'redmi',
-  'realmi': 'realme',
+  'redmi': 'redmi',
+  'readmi': 'redmi',
+  'radmi': 'redmi',
   'xiomi': 'xiaomi',
   'xaomi': 'xiaomi',
+  'xiaomi': 'xiaomi',
+  'shaomi': 'xiaomi',
+  'mi': 'xiaomi',
+  'poco': 'poco',
+  'pocco': 'poco',
+
+  // =============================================
+  // REALME
+  // =============================================
+  'realmi': 'realme',
+  'realme': 'realme',
+  'relme': 'realme',
+  'rialme': 'realme',
+  'reelme': 'realme',
+
+  // =============================================
+  // OTHER BRANDS
+  // =============================================
   'lenova': 'lenovo',
+  'lenovo': 'lenovo',
+  'lanova': 'lenovo',
   'asoos': 'asus',
+  'asus': 'asus',
+  'azus': 'asus',
   'acer': 'acer',
+  'asar': 'acer',
   'dell': 'dell',
+  'del': 'dell',
   'hp': 'hp',
+  'hewlett': 'hp',
   'nokia': 'nokia',
+  'nokya': 'nokia',
+  'moto': 'motorola',
+  'motorolla': 'motorola',
+  'motorola': 'motorola',
+  'vivo': 'vivo',
+  'vivoo': 'vivo',
+  'oppo': 'oppo',
+  'opo': 'oppo',
+  'huawei': 'huawei',
+  'huwai': 'huawei',
+  'google': 'google',
+  'googel': 'google',
+  'pixle': 'pixel',
+  'pixel': 'pixel',
+  'nothing': 'nothing',
+  'nuthing': 'nothing',
+
+  // =============================================
+  // AUDIO BRANDS
+  // =============================================
   'jbl': 'jbl',
+  'jabeel': 'jbl',
   'bose': 'bose',
+  'bos': 'bose',
   'sony': 'sony',
+  'soni': 'sony',
   'boat': 'boat',
   'boAt': 'boat',
-  
-  // Categories
+  'bote': 'boat',
+  'skullcandy': 'skullcandy',
+  'skulcandy': 'skullcandy',
+  'sennheiser': 'sennheiser',
+  'senheiser': 'sennheiser',
+  'marshall': 'marshall',
+  'marshal': 'marshall',
+
+  // =============================================
+  // PRODUCT CATEGORIES
+  // =============================================
   'fone': 'phone',
   'phon': 'phone',
+  'mobile': 'phone',
+  'mobail': 'phone',
   'labtop': 'laptop',
   'leptop': 'laptop',
+  'laptap': 'laptop',
+  'notebook': 'laptop',
   'hedphone': 'headphone',
   'headfone': 'headphone',
+  'headphones': 'headphone',
   'eirbuds': 'earbuds',
-  'earbudd': 'earbuds'
+  'earbudd': 'earbuds',
+  'earphone': 'earbuds',
+  'airbuds': 'earbuds',
+  'TWS': 'earbuds wireless',
+  'chaarger': 'charger',
+  'chargar': 'charger',
+  'cabal': 'cable',
+  'kabel': 'cable',
+  'cover': 'case cover',
+  'kawar': 'case cover',
+  'screen gard': 'screen guard',
+  'screengaurd': 'screen guard',
+  'tampered': 'tempered',
+  'temperd': 'tempered',
+  'smartwach': 'smartwatch',
+  'smart wach': 'smartwatch',
+  'watch': 'watch smartwatch',
+  'tabelt': 'tablet',
+  'teblet': 'tablet'
 };
 
 // Intent keywords that affect sorting/filtering
@@ -90,28 +316,39 @@ const intentKeywords = {
   cheap: { sortBy: 'price', sortOrder: 'asc' },
   budget: { sortBy: 'price', sortOrder: 'asc' },
   affordable: { sortBy: 'price', sortOrder: 'asc' },
+  value: { sortBy: 'price', sortOrder: 'asc' },
   expensive: { sortBy: 'price', sortOrder: 'desc' },
   premium: { sortBy: 'price', sortOrder: 'desc' },
+  luxury: { sortBy: 'price', sortOrder: 'desc' },
   
   // Rating intent
   best: { sortBy: 'rating', sortOrder: 'desc' },
   top: { sortBy: 'rating', sortOrder: 'desc' },
   rated: { sortBy: 'rating', sortOrder: 'desc' },
+  excellent: { sortBy: 'rating', sortOrder: 'desc' },
+  outstanding: { sortBy: 'rating', sortOrder: 'desc' },
   popular: { sortBy: 'salesCount', sortOrder: 'desc' },
   trending: { sortBy: 'salesCount', sortOrder: 'desc' },
+  bestseller: { sortBy: 'salesCount', sortOrder: 'desc' },
   
   // Recency intent
   latest: { sortBy: 'createdAt', sortOrder: 'desc' },
   new: { sortBy: 'createdAt', sortOrder: 'desc' },
   newest: { sortBy: 'createdAt', sortOrder: 'desc' },
+  recent: { sortBy: 'createdAt', sortOrder: 'desc' },
+  fresh: { sortBy: 'createdAt', sortOrder: 'desc' },
   
   // Availability
   available: { inStock: true },
   stock: { inStock: true }
 };
 
-// Color keywords
-const colorKeywords = ['black', 'white', 'silver', 'gold', 'blue', 'green', 'purple', 'red', 'pink', 'grey', 'gray', 'titanium', 'graphite'];
+// Color keywords (English + transliterated Hindi)
+const colorKeywords = [
+  'black', 'white', 'silver', 'gold', 'blue', 'green', 'purple', 'red', 
+  'pink', 'grey', 'gray', 'titanium', 'graphite', 'orange', 'yellow',
+  'midnight', 'starlight', 'bronze', 'copper', 'rose'
+];
 
 // Storage keywords
 const storagePatterns = /(\d+)\s*(gb|tb)/gi;

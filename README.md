@@ -91,6 +91,44 @@ curl "http://localhost:3000/api/v1/search/product?query=laptop&minPrice=50000&ma
 curl "http://localhost:3000/api/v1/search/product?query=Samsung&sortBy=price&sortOrder=asc"
 ```
 
+## 🗣️ Hinglish Support (100+ Terms)
+
+The search engine understands Hindi-English mixed queries commonly used in India:
+
+| Category | Examples |
+|----------|----------|
+| **Price** | sasta, mehenga, kimat, daam, paisa |
+| **Quality** | accha, behtreen, zabardast, lajawaab, badhiya |
+| **Size** | bada, chota, lambi, patla, halka |
+| **Colors** | kala (black), safed (white), laal (red), neela (blue) |
+| **Time** | naya (new), purana (old), taaza (latest) |
+| **Speed** | tez (fast), jaldi (quick), tagda (powerful) |
+| **Shopping** | kharido (buy), mangao (order), wapsi (return) |
+
+**Example Queries:**
+```bash
+# "Cheap phone" in Hinglish
+curl "http://localhost:3000/api/v1/search/product?query=sasta%20phone"
+
+# "Best quality laptop"
+curl "http://localhost:3000/api/v1/search/product?query=behtreen%20laptop"
+
+# "New red iPhone"
+curl "http://localhost:3000/api/v1/search/product?query=naya%20laal%20iphone"
+```
+
+## ✏️ Spelling Correction
+
+Handles common misspellings:
+
+| Misspelled | Corrected |
+|------------|-----------|
+| ifone, iphon | iphone |
+| sumsung, samung | samsung |
+| onplus, one+ | oneplus |
+| redme, readmi | redmi |
+| labtop, leptop | laptop |
+
 ## 🎯 Ranking Algorithm
 
 Products are ranked using multiple weighted factors:

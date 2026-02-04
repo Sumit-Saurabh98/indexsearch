@@ -150,8 +150,14 @@ class SearchService {
         ...p,
         productId: p._id,
         discountPercent: p.mrp && p.mrp > p.price ? Math.round(((p.mrp - p.price) / p.mrp) * 100) : 0,
-        inStock: p.stock > 0
+        inStock: p.stock > 0,
+        Sellingprice: p.price  // Assignment compatibility alias
       };
+      
+      // Ensure Sellingprice is always present
+      if (!product.Sellingprice) {
+        product.Sellingprice = product.price;
+      }
       
       if (p.rankingScore !== undefined) {
         product.rankingScore = p.rankingScore;
