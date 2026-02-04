@@ -4,6 +4,7 @@ const router = express.Router();
 // Import route modules
 const productRoutes = require('./product.routes');
 const productsRoutes = require('./products.routes');
+const searchRoutes = require('./search.routes');
 
 // API Information
 router.get('/', (req, res) => {
@@ -35,5 +36,6 @@ router.get('/', (req, res) => {
 // Mount route modules
 router.use('/product', productRoutes);
 router.use('/products', productsRoutes);
+router.use('/search', searchRoutes);
 
 module.exports = router;
