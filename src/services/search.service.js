@@ -1,5 +1,6 @@
 const Product = require('../models/product.model');
 const { parseQuery } = require('../utils/query-parser');
+const rankingService = require('./ranking.service');
 
 class SearchService {
   
@@ -12,7 +13,8 @@ class SearchService {
       minPrice,
       maxPrice,
       minRating,
-      inStock
+      inStock,
+      useRanking = true  // Enable ranking by default
     } = options;
 
     const startTime = Date.now();
@@ -45,47 +47,67 @@ class SearchService {
       filter.price = { ...filter.price, $gte: extractedFilters.minPrice };
     }
     if (extractedFilters.color) {
-      // Search in metadata for color
       filter['metadata.color'] = new RegExp(extractedFilters.color, 'i');
     }
-
-    // Apply intent-based sorting
     if (sortOptions.inStock) {
       filter.stock = { $gt: 0 };
     }
 
     const skip = (parseInt(page) - 1) * parseInt(limit);
+    const limitNum = parseInt(limit);
 
-    // Build query with appropriate sorting
-    let searchQuery;
-    
+    // Execute query - fetch more results for ranking
+    let products;
+    let total;
+    const textScores = {};
+
     if (filter.$text) {
       // With text search - include text score
-      if (sortOptions.sortBy) {
-        // Combine text score with intent-based sorting
-        searchQuery = Product.find(filter, { score: { $meta: 'textScore' } })
-          .sort({ 
-            [sortOptions.sortBy]: sortOptions.sortOrder === 'asc' ? 1 : -1,
-            score: { $meta: 'textScore' }
-          });
+      const results = await Product.find(filter, { score: { $meta: 'textScore' } })
+        .sort({ score: { $meta: 'textScore' } })
+        .lean();
+      
+      // Collect text scores
+      results.forEach(p => {
+        textScores[p._id.toString()] = p.score || 0;
+      });
+
+      total = results.length;
+
+      if (useRanking && !sortOptions.sortBy) {
+        // Apply custom ranking
+        const rankedProducts = await rankingService.rankProducts(results, textScores);
+        products = rankedProducts.slice(skip, skip + limitNum);
+      } else if (sortOptions.sortBy) {
+        // Apply intent-based sorting
+        results.sort((a, b) => {
+          const aVal = a[sortOptions.sortBy] || 0;
+          const bVal = b[sortOptions.sortBy] || 0;
+          return sortOptions.sortOrder === 'asc' ? aVal - bVal : bVal - aVal;
+        });
+        products = results.slice(skip, skip + limitNum);
       } else {
-        // Pure text relevance sorting
-        searchQuery = Product.find(filter, { score: { $meta: 'textScore' } })
-          .sort({ score: { $meta: 'textScore' } });
+        products = results.slice(skip, skip + limitNum);
       }
     } else {
       // Without text search
-      const sortBy = sortOptions.sortBy || 'rating';
-      const sortOrder = sortOptions.sortOrder === 'asc' ? 1 : -1;
-      searchQuery = Product.find(filter)
-        .sort({ [sortBy]: sortOrder, salesCount: -1 });
-    }
+      const results = await Product.find(filter).lean();
+      total = results.length;
 
-    // Execute query with pagination
-    const [products, total] = await Promise.all([
-      searchQuery.skip(skip).limit(parseInt(limit)),
-      Product.countDocuments(filter)
-    ]);
+      if (useRanking) {
+        const rankedProducts = await rankingService.rankProducts(results, textScores);
+        products = rankedProducts.slice(skip, skip + limitNum);
+      } else {
+        const sortBy = sortOptions.sortBy || 'rating';
+        const sortOrder = sortOptions.sortOrder === 'asc' ? 1 : -1;
+        results.sort((a, b) => {
+          const aVal = a[sortBy] || 0;
+          const bVal = b[sortBy] || 0;
+          return sortOrder * (bVal - aVal);
+        });
+        products = results.slice(skip, skip + limitNum);
+      }
+    }
 
     const duration = Date.now() - startTime;
 
@@ -94,13 +116,30 @@ class SearchService {
       console.warn(`[SLOW SEARCH] Query "${rawQuery}" took ${duration}ms`);
     }
 
+    // Format products for API response
+    const formattedProducts = products.map(p => {
+      const product = p.toAPIResponse ? p.toAPIResponse() : {
+        ...p,
+        productId: p._id,
+        discountPercent: p.mrp && p.mrp > p.price ? Math.round(((p.mrp - p.price) / p.mrp) * 100) : 0,
+        inStock: p.stock > 0
+      };
+      
+      // Add ranking score if available
+      if (p.rankingScore !== undefined) {
+        product.rankingScore = p.rankingScore;
+      }
+      
+      return product;
+    });
+
     return {
-      products: products.map(p => p.toAPIResponse()),
+      products: formattedProducts,
       pagination: {
         page: parseInt(page),
-        limit: parseInt(limit),
+        limit: limitNum,
         total,
-        pages: Math.ceil(total / parseInt(limit))
+        pages: Math.ceil(total / limitNum)
       },
       meta: {
         originalQuery: parsed.originalQuery,
@@ -108,6 +147,7 @@ class SearchService {
         corrections: corrections.length > 0 ? corrections : undefined,
         extractedFilters: Object.keys(extractedFilters).length > 0 ? extractedFilters : undefined,
         sortApplied: Object.keys(sortOptions).length > 0 ? sortOptions : undefined,
+        rankingApplied: useRanking && !sortOptions.sortBy,
         responseTime: duration
       }
     };
