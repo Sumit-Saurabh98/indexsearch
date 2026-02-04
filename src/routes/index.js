@@ -1,14 +1,9 @@
-/**
- * Main Routes Index
- * Aggregates all API routes
- */
-
 const express = require('express');
 const router = express.Router();
 
-// Import route modules (to be created in Phase 4)
-// const productRoutes = require('./product.routes');
-// const searchRoutes = require('./search.routes');
+// Import route modules
+const productRoutes = require('./product.routes');
+const productsRoutes = require('./products.routes');
 
 // API Information
 router.get('/', (req, res) => {
@@ -25,7 +20,9 @@ router.get('/', (req, res) => {
           getOne: 'GET /api/v1/product/:id',
           getAll: 'GET /api/v1/products',
           updateMeta: 'PUT /api/v1/product/meta-data',
-          delete: 'DELETE /api/v1/product/:id'
+          update: 'PATCH /api/v1/product/:id',
+          delete: 'DELETE /api/v1/product/:id',
+          stats: 'GET /api/v1/product/stats'
         },
         search: {
           products: 'GET /api/v1/search/product?query=...'
@@ -35,9 +32,8 @@ router.get('/', (req, res) => {
   });
 });
 
-// Mount route modules (will be uncommented in Phase 4)
-// router.use('/product', productRoutes);
-// router.use('/products', productRoutes);
-// router.use('/search', searchRoutes);
+// Mount route modules
+router.use('/product', productRoutes);
+router.use('/products', productsRoutes);
 
 module.exports = router;
