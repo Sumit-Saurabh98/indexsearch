@@ -153,11 +153,15 @@ ProductSchema.index(
 
 // Compound indexes for common queries
 ProductSchema.index({ category: 1, rating: -1 });
+ProductSchema.index({ category: 1, price: 1 });
 ProductSchema.index({ brand: 1, price: 1 });
+ProductSchema.index({ brand: 1, rating: -1 });
 ProductSchema.index({ rating: -1, salesCount: -1 });
+ProductSchema.index({ price: 1, rating: -1 });
 ProductSchema.index({ stock: 1 });
 ProductSchema.index({ createdAt: -1 });
 ProductSchema.index({ source: 1 });
+ProductSchema.index({ category: 1, brand: 1, price: 1 }); // Composite for filtered searches
 
 // ============================================
 // Virtual Fields
