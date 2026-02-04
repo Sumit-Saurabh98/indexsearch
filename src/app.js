@@ -9,60 +9,79 @@ const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
 
-// Import routes (to be created)
-// const routes = require('./routes');
+// Import routes
+const routes = require('./routes');
 
-// Import middleware (to be created)
-// const errorHandler = require('./middleware/error.middleware');
+// Import middleware
+const { errorHandler, notFoundHandler } = require('./middleware/error.middleware');
+const { requestTimer, requestLogger } = require('./middleware/request.middleware');
+
+// Import config
+const { API_PREFIX } = require('./config/constants');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// ============================================
 // Middleware
+// ============================================
+
+// CORS - Allow cross-origin requests
 app.use(cors());
-app.use(express.json());
+
+// Body parsers
+app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
+
+// Request logging
 app.use(morgan('dev'));
+
+// Custom middleware
+app.use(requestTimer);
+app.use(requestLogger);
+
+// ============================================
+// Routes
+// ============================================
 
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.status(200).json({
-    status: 'ok',
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime()
+    success: true,
+    data: {
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      environment: process.env.NODE_ENV || 'development'
+    }
   });
 });
 
-// API routes (to be implemented in Phase 4)
-// app.use('/api/v1', routes);
+// API routes
+app.use(API_PREFIX, routes);
+
+// ============================================
+// Error Handling
+// ============================================
 
 // 404 handler
-app.use((req, res, next) => {
-  res.status(404).json({
-    success: false,
-    error: {
-      code: 'NOT_FOUND',
-      message: `Route ${req.method} ${req.path} not found`
-    }
-  });
-});
+app.use(notFoundHandler);
 
 // Global error handler
-app.use((err, req, res, next) => {
-  console.error('Error:', err.message);
-  res.status(err.status || 500).json({
-    success: false,
-    error: {
-      code: err.code || 'INTERNAL_ERROR',
-      message: err.message || 'Internal server error'
-    }
-  });
-});
+app.use(errorHandler);
 
-// Start server
+// ============================================
+// Server Startup
+// ============================================
+
 app.listen(PORT, () => {
-  console.log(`🚀 IndexSearch server running on http://localhost:${PORT}`);
-  console.log(`📊 Health check: http://localhost:${PORT}/health`);
+  console.log(`\n🚀 IndexSearch Server Started`);
+  console.log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
+  console.log(`📍 URL:         http://localhost:${PORT}`);
+  console.log(`📊 Health:      http://localhost:${PORT}/health`);
+  console.log(`📚 API Info:    http://localhost:${PORT}${API_PREFIX}`);
+  console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`);
 });
 
 module.exports = app;
