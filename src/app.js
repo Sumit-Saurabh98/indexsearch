@@ -9,6 +9,9 @@ const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
 
+// Import database
+const { connectDB, isConnected } = require('./config/database');
+
 // Import routes
 const routes = require('./routes');
 
@@ -52,7 +55,8 @@ app.get('/health', (req, res) => {
       status: 'ok',
       timestamp: new Date().toISOString(),
       uptime: process.uptime(),
-      environment: process.env.NODE_ENV || 'development'
+      environment: process.env.NODE_ENV || 'development',
+      database: isConnected() ? 'connected' : 'disconnected'
     }
   });
 });
@@ -74,14 +78,28 @@ app.use(errorHandler);
 // Server Startup
 // ============================================
 
-app.listen(PORT, () => {
-  console.log(`\n🚀 IndexSearch Server Started`);
-  console.log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
-  console.log(`📍 URL:         http://localhost:${PORT}`);
-  console.log(`📊 Health:      http://localhost:${PORT}/health`);
-  console.log(`📚 API Info:    http://localhost:${PORT}${API_PREFIX}`);
-  console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`);
-});
+const startServer = async () => {
+  try {
+    // Connect to MongoDB
+    await connectDB();
+
+    // Start Express server
+    app.listen(PORT, () => {
+      console.log(`\n🚀 IndexSearch Server Started`);
+      console.log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
+      console.log(`📍 URL:         http://localhost:${PORT}`);
+      console.log(`📊 Health:      http://localhost:${PORT}/health`);
+      console.log(`📚 API Info:    http://localhost:${PORT}${API_PREFIX}`);
+      console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+      console.log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`);
+    });
+  } catch (error) {
+    console.error('❌ Failed to start server:', error.message);
+    process.exit(1);
+  }
+};
+
+// Start the server
+startServer();
 
 module.exports = app;
