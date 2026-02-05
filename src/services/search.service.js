@@ -89,16 +89,22 @@ class SearchService {
     let total;
     const textScores = {};
 
+    // Performance optimization: limit results fetched for ranking
+    const maxRankingResults = 200;  // Rank top 200, then paginate
+
     if (filter.$text) {
+      // Use limit in query for better performance
       const results = await Product.find(filter, { score: { $meta: 'textScore' } })
         .sort({ score: { $meta: 'textScore' } })
+        .limit(maxRankingResults)  // Limit for performance
         .lean();
       
       results.forEach(p => {
         textScores[p._id.toString()] = p.score || 0;
       });
 
-      total = results.length;
+      // Get total count separately (faster than fetching all docs)
+      total = await Product.countDocuments(filter);
 
       if (shouldRank) {
         const rankedProducts = await rankingService.rankProducts(results, textScores);
@@ -114,21 +120,16 @@ class SearchService {
         products = results.slice(skip, skip + limitNum);
       }
     } else {
-      const results = await Product.find(filter).lean();
-      total = results.length;
-
-      if (shouldRank) {
-        const rankedProducts = await rankingService.rankProducts(results, textScores);
-        products = rankedProducts.slice(skip, skip + limitNum);
-      } else {
-        const sortField = finalSortBy || 'rating';
-        results.sort((a, b) => {
-          const aVal = a[sortField] || 0;
-          const bVal = b[sortField] || 0;
-          return finalSortOrder === 'asc' ? aVal - bVal : bVal - aVal;
-        });
-        products = results.slice(skip, skip + limitNum);
-      }
+      // Non-text search - use pagination in query
+      const sortField = finalSortBy || 'rating';
+      const sortDirection = finalSortOrder === 'asc' ? 1 : -1;
+      
+      total = await Product.countDocuments(filter);
+      products = await Product.find(filter)
+        .sort({ [sortField]: sortDirection })
+        .skip(skip)
+        .limit(limitNum)
+        .lean();
     }
 
     // Get facets/aggregations if requested

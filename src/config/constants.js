@@ -16,16 +16,16 @@ module.exports = {
   MAX_SEARCH_RESULTS: 50,
   SEARCH_LATENCY_THRESHOLD_MS: 1000,
   
-  // Ranking Weights
+  // Ranking Weights (must sum to ~1.0)
   RANKING_WEIGHTS: {
-    textRelevance: 0.30,
-    rating: 0.20,
-    salesPopularity: 0.15,
-    stockAvailability: 0.10,
-    priceCompetitiveness: 0.10,
-    recency: 0.05,
-    returnRate: -0.05,      // penalty
-    complaintsRate: -0.05   // penalty
+    textRelevance: 0.50,         // Increased - most important
+    rating: 0.20,                // User ratings
+    salesPopularity: 0.10,       // Sales count
+    stockAvailability: 0.05,     // In-stock priority
+    priceCompetitiveness: 0.05,  // Lower price = higher
+    recency: 0.05,               // Newer products
+    returnRate: -0.025,          // penalty
+    complaintsRate: -0.025       // penalty
   },
   
   // Product Categories
