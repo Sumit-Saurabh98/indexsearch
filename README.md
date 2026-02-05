@@ -135,14 +135,14 @@ Products are ranked using multiple weighted factors:
 
 | Factor | Weight | Description |
 |--------|--------|-------------|
-| Text Relevance | 30% | MongoDB text score |
+| Text Relevance | 50% | MongoDB text score (primary) |
 | Rating | 20% | Product rating (0-5) |
-| Sales Popularity | 15% | Sales count |
-| Stock Availability | 10% | In-stock products rank higher |
-| Price Competitiveness | 10% | Lower price = higher rank |
+| Sales Popularity | 10% | Sales count |
+| Stock Availability | 5% | In-stock products rank higher |
+| Price Competitiveness | 5% | Lower price = higher rank |
 | Recency | 5% | Newer products rank higher |
-| Return Rate | -5% | Penalty for high returns |
-| Complaints | -5% | Penalty for complaints |
+| Return Rate | -2.5% | Penalty for high returns |
+| Complaints | -2.5% | Penalty for complaints |
 
 ## 📁 Project Structure
 
